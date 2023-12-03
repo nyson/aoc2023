@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "aoc2023"
+version = "0.1.0"
+description = ""
+authors = ["Jonathan Skårstedt <jonathan@hazeltime.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.scripts]
+aoc2023 = "aoc2023.launcher:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
