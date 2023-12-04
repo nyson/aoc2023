@@ -3,10 +3,17 @@ from os import path
 import sys
 import click
 from aoc2023 import unicode_symbols as u
+from aoc2023.unicode_symbols import FgColor, carousel, styled, Style
 
 
 def cristmas_header():
-    print(f"\t{u.tree}{u.bell}{u.santa}   Advent of Code 2023!   {u.santa}{u.bell}{u.tree}")
+    print(f"\t{u.tree}{u.bell}{u.santa}", end="   ")
+    print(carousel(
+        "Advent of Code 2023!", 
+        [FgColor.red, Style.bold], 
+        [FgColor.green], 
+        [FgColor.yellow]), end="   ")
+    print(f"{u.santa}{u.bell}{u.tree}")
     
 
 @click.command()
@@ -31,7 +38,8 @@ def cli(data_folder: str, day: int, data_file: str, example: bool):
 
 def run_dynamic(filename, n):
     if not path.exists(filename):
-        print(f"\n{u.warning} Oops! {filename} doesn't exist! {u.confused}")
+        print(f"\n{u.warning}", end= " ")
+        print(styled(f"Oops! {filename} doesn't exist!", Style.framed, Style.bold, Style.underline) + f" {u.confused}")
         print("Did you download the data for the day?")
         return
 
