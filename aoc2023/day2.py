@@ -3,6 +3,7 @@ from enum import Enum
 from io import TextIOWrapper
 import math
 from typing import List, TypeAlias
+from aoc2023 import unicode_symbols as u
 
 
 class Color(Enum):
@@ -23,9 +24,9 @@ def col(input: str) -> Color:
 
 def col_sym(c: Color) -> str:
     match c:
-        case Color.red:     return "\U0001F7E5"
-        case Color.blue:    return "\U0001F7E6"
-        case Color.green:   return "\U0001F7E9"
+        case Color.red:     return u.red_cube
+        case Color.blue:    return u.blue_cube
+        case Color.green:   return u.green_cube
 
 @dataclass
 class Game():
@@ -60,7 +61,7 @@ class Game():
 
     def print_showings(self) -> str:
         return " ║".join(map(
-                lambda s: "\U0001F44B " + " ".join([f"{num}{col_sym(color)}" for color, num in s.items()]),
+                lambda s: f"{u.wave} " + " ".join([f"{num}{col_sym(color)}" for color, num in s.items()]),
                 self.showings))
 
     def power_level(self) -> int:
@@ -107,15 +108,15 @@ def run(file: TextIOWrapper):
 
     for game in games:
         print(f"\nGame {game.id}: {game.print_showings()}")
-        print(f" \U0001F5B9: \"{game.raw}\"")
-        print(f" \U000026A1: {game.power_level()}")
-        print(f" \U0001F45C: {game.pretty_used_cubes()}")
+        print(f" {u.text}: \"{game.raw}\"")
+        print(f" {u.bolt}: {game.power_level()}")
+        print(f" {u.bag}: {game.pretty_used_cubes()}")
 
         if game.fulfills_requirement(req):
-            print(f" \U00002705: Fulfills requirement!")
+            print(f" {u.check}: Fulfills requirement!")
             sum_gids_possible += game.id
         else:
-            print(f" \U00002614: Does not fulfill requirement :(")
+            print(f" {u.fail}: Does not fulfill requirement :(")
 
         sum_power_level += game.power_level()
 

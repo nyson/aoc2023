@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from io import TextIOWrapper
 from typing import TypeAlias, List, TypeVar
+from aoc2023 import unicode_symbols as u
 
 EngineMatrix: TypeAlias = List[str]
 def ppem(em: EngineMatrix):
@@ -63,9 +64,9 @@ def print_part_nums(symbols):
     print(f"Sum of part numbers: {sum_disc}")
 
 def print_symbols(symbols):
-    print("\U0001F481 Symbols found!")
+    print(f"{u.presenter} Symbols found!")
     for s in symbols:
-        char = "\U00002B50\t" if s.sym == "*" else f"{s.sym}\t"
+        char = f"{u.star}\t" if s.sym == "*" else f"{s.sym}\t"
         numbers = ", ".join([f"{n.number}" for _, n in s.numbers.items()])
         print(f"{char} at {s.pos} with gear ratio {s.gear_ratio()} has these parts: {numbers}")
 
