@@ -35,26 +35,39 @@ class Symbol():
             return pn1*pn2
 
 def run(file: TextIOWrapper):
-    em: EngineMatrix = []
-    for line in file.readlines():
-        em.append(line.strip())
-
-    ppem(em)
-
-    sum_disc = 0
+    em = parse_engine_matrix(file)
 
     symbols = get_all_symbols(em)
 
+    print_symbols(symbols)
+    print_part_nums(symbols)
+    print_gear_ratios(symbols)
+
+def parse_engine_matrix(file):
+    em: EngineMatrix = []
+    for line in file.readlines():
+        em.append(line.strip())
+    return em
+
+def print_gear_ratios(symbols):
+    gear_ratios = sum([
+        ratio 
+        for ratio in map(lambda s: s.gear_ratio(), symbols) 
+        if ratio is not None])
+    print(f"Gear ratios: {gear_ratios}")
+
+def print_part_nums(symbols):
+    sum_disc = 0
     for p in get_all_partnums(symbols):
         sum_disc += p.number
-    print(f"Sum with discrete part numbers: {sum_disc}")
+    print(f"Sum of part numbers: {sum_disc}")
 
-    overlapping_sum = 0
-    for p in get_all_overlapping(symbols):
-        overlapping_sum += p.number
-    print(f"Sum with overlapping part numbers: {overlapping_sum}")
-    gear_ratios = sum([ratio for ratio in map(lambda s: s.gear_ratio(), symbols) if ratio is not None])
-    print(f"Gear ratios: {gear_ratios}")
+def print_symbols(symbols):
+    print("\U0001F481 Symbols found!")
+    for s in symbols:
+        char = "\U00002B50\t" if s.sym == "*" else f"{s.sym}\t"
+        numbers = ", ".join([f"{n.number}" for _, n in s.numbers.items()])
+        print(f"{char} at {s.pos} with gear ratio {s.gear_ratio()} has these parts: {numbers}")
 
 def get_adjacent_partnums(em: EngineMatrix, pos: tuple[int, int]) -> dict[PartPos,PartNumber]:
     deltas = [-1, 0, 1]

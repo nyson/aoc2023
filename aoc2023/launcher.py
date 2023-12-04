@@ -9,9 +9,9 @@ def cli(data_folder: str, day: int, data_file: str):
     """Launches a day"""
     filename = f"{data_folder}/{data_file}"
     file = open(filename)
-    print(f"*** Advent of Code 2023! ***")
-    print(f"[Day {day}] Running {filename}...")
-    print(f"*** Advent of Code 2023! ***\n")
+    print(f"\U0001F384\U0001F514\U0001F385 Advent of Code 2023!\U0001F385\U0001F514\U0001F384")
+    print(f"\U0001F4C5 {day}: Running {filename}...")
+    print(f"\U0001F384\U0001F514\U0001F385 Advent of Code 2023!\U0001F385\U0001F514\U0001F384\n")
 
     match day:
         case 1:
