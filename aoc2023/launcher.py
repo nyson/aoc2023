@@ -1,20 +1,24 @@
 import importlib
 from os import path
-import sys
 import click
 from aoc2023 import unicode_symbols as u
 from aoc2023.unicode_symbols import FgColor, carousel, styled, Style
 
-
-def cristmas_header():
-    print(f"\t{u.tree}{u.bell}{u.santa}", end="   ")
-    print(carousel(
-        "Advent of Code 2023!", 
-        [FgColor.red, Style.bold], 
+def christmas_header(day, filename) -> str:
+    s = ""
+    s += f"{u.tree}{u.bell}{u.santa}   "
+    s += carousel(
+        "Advent of Code 2023!",
+        [FgColor.red], 
         [FgColor.green], 
-        [FgColor.yellow]), end="   ")
-    print(f"{u.santa}{u.bell}{u.tree}")
-    
+        [FgColor.yellow],
+        base= [Style.bold, Style.underline])
+    s += "   "
+    s += f"{u.santa}{u.bell}{u.tree}"
+
+    print(s, end="\n\n")
+    print(f"{u.day} {day}: Running {filename}...".center(44))
+    print(f"\n{s}")
 
 @click.command()
 @click.option("--data-folder", default="./data", help="Path to data folder")
@@ -27,10 +31,8 @@ def cli(data_folder: str, day: int, data_file: str, example: bool):
     data_file = data_file if data_file is not None else f"day{day}{ex_suffix}.aoc"
     filename = f"{data_folder}/{data_file}"
    
-    cristmas_header()
-    print(f"\t{u.day} {day}: Running {filename}...")
-    cristmas_header()
-
+    christmas_header(day, filename)
+    
     match day:
         case n if 1 <= n <= 25:
             run_dynamic(filename, n)

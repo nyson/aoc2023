@@ -38,9 +38,10 @@ def styled(text: str, *ins: Enum):
     set = mk_set_ins(ins)
     return f"{set}{text}{reset}"
 
-def carousel(text: str, *inses: list[Enum]):
-    s, i, l = "", 0, len(text)
-    for ins in itertools.cycle(inses):
+def carousel(text: str, *instruction_sets: list[Enum], base: list[Enum] | None = None):
+    s = "" if base is None else mk_set_ins(base)  
+    i, l = 0, len(text)
+    for ins in itertools.cycle(instruction_sets):
         ch = text[i]
         s += f"{mk_set_ins(ins)}{ch}"
         i += 1
