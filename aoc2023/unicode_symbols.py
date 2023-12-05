@@ -39,7 +39,7 @@ def styled(text: str, *ins: Enum):
     return f"{set}{text}{reset}"
 
 def carousel(text: str, *instruction_sets: list[Enum], base: list[Enum] | None = None):
-    s = "" if base is None else mk_set_ins(base)  
+    s = "" if base is None else mk_set_ins(base)
     i, l = 0, len(text)
     for ins in itertools.cycle(instruction_sets):
         ch = text[i]
@@ -54,43 +54,43 @@ def mk_set_ins(ins):
     return set
 
 
-
-tree = "\U0001F384" # 🎄
-bell = "\U0001F514" # 🔔
-santa = "\U0001F385" # 🎅
-day = "\U0001F4C5" # 📅
-warning = styled("\U000026A0 ", FgColor.red) # ⚠
-confused = "\U0001F914" # 🤔
+# launcher
+tree = "🎄"
+bell = "🔔"
+santa = "🎅"
+day = "📅"
+confused = "🤔"
+warning = styled("⚠ ", FgColor.red)
 
 #day2
-red_cube = "\U0001F7E5" # 🟥
-blue_cube = "\U0001F7E6" # 🟦
-green_cube = "\U0001F7E9" # 🟩
-wave = "\U0001F44B" #👋
-text = styled("\U0001F5B9 ", FgColor.black, BgColor.white) # 🖹
-bolt = "\U000026A1" # ⚡
-bag = "\U0001F45C" # 👜
-check = "\U00002705" # ✅
-fail = "\U00002614" # ☔
+red_cube = "🟥"
+blue_cube = "🟦"
+green_cube = "🟩"
+wave = "👋"
+bolt = "⚡"
+bag = "👜"
+check = "✅"
+fail = "☔"
+text = styled("🖹 ", FgColor.black, BgColor.white)
 
-#day3
-presenter = "\U0001F481" # 💁
-star = "\U00002B50" # ⭐
+#day3"
+presenter = "💁"
+star = "⭐"
 
 #day4
-card = "\U0001F3B4" # 🎴
-points = "\U0001F4AF" # 💯
-thin_ticket = "\U0001F39F" # 🎟 
-ticket = "\U0001F3AB" # 🎫
-trophy = "\U0001F3C6" # 🏆
-checkered_flag = "\U0001F3C1" # 🏁
+card = "🎴"
+points = "💯"
+thin_ticket = "🎟"
+ticket = "🎫"
+trophy = "🏆"
+checkered_flag = "🏁"
 
 #day5
-seed = "\U0001F331" # 🌱
-soil = "\U0001F33E" # 🌾
-fertilizer = "\U0001F4A9" # 💩
-water = "\U0001F6B0" # 🚰
-light = "\U0001F31E" # 🌞
-temperature = "\U0001F321" # 🌡
-humidity = "\U0001F4A7" # 💧
-location = "\U0001F4CC" # 📌
+seed = "🌱"
+soil = "🌾"
+fertilizer = "💩"
+water = "🚰"
+light = "🌞"
+temperature = "🌡"
+humidity = "💧"
+location = "📌"
