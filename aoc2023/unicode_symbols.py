@@ -84,3 +84,13 @@ thin_ticket = "\U0001F39F" # 🎟
 ticket = "\U0001F3AB" # 🎫
 trophy = "\U0001F3C6" # 🏆
 checkered_flag = "\U0001F3C1" # 🏁
+
+#day5
+seed = "\U0001F331" # 🌱
+soil = "\U0001F33E" # 🌾
+fertilizer = "\U0001F4A9" # 💩
+water = "\U0001F6B0" # 🚰
+light = "\U0001F31E" # 🌞
+temperature = "\U0001F321" # 🌡
+humidity = "\U0001F4A7" # 💧
+location = "\U0001F4CC" # 📌
