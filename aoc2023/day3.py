@@ -44,26 +44,26 @@ def run(file: TextIOWrapper):
     print_part_nums(symbols)
     print_gear_ratios(symbols)
 
-def parse_engine_matrix(file):
+def parse_engine_matrix(file: TextIOWrapper):
     em: EngineMatrix = []
     for line in file.readlines():
         em.append(line.strip())
     return em
 
-def print_gear_ratios(symbols):
+def print_gear_ratios(symbols: list[Symbol]):
     gear_ratios = sum([
-        ratio 
-        for ratio in map(lambda s: s.gear_ratio(), symbols) 
+        ratio
+        for ratio in map(lambda s: s.gear_ratio(), symbols)
         if ratio is not None])
     print(f"Gear ratios: {gear_ratios}")
 
-def print_part_nums(symbols):
+def print_part_nums(symbols: list[Symbol]):
     sum_disc = 0
     for p in get_all_partnums(symbols):
         sum_disc += p.number
     print(f"Sum of part numbers: {sum_disc}")
 
-def print_symbols(symbols):
+def print_symbols(symbols: list[Symbol]):
     print(f"{u.presenter} Symbols found!")
     for s in symbols:
         char = f"{u.star}\t" if s.sym == "*" else f"{s.sym}\t"
