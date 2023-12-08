@@ -96,6 +96,15 @@ class MapTransform():
 
 		return input
 
+	def lookup_range(self, input: range):
+		out += []
+		for t in self.transforms:
+			match range_union(input, t.source_range()):
+				case None:
+					pass
+				case u:
+
+
 	def __largest_number(self) -> int:
 		mx = 0
 		for t in self.transforms:
