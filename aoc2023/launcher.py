@@ -4,7 +4,7 @@ import click
 from aoc2023 import unicode_symbols as u
 from aoc2023.unicode_symbols import FgColor, carousel, styled, Style
 
-def christmas_header(day, filename) -> str:
+def print_christmas_header(day, filename):
     s = ""
     s += f"{u.tree}{u.bell}{u.santa}   "
     s += carousel(
@@ -25,13 +25,14 @@ def christmas_header(day, filename) -> str:
 @click.option("-d", "--day", default=1, help="Day to verify")
 @click.option("-f", "--data-file", default=None, help="path to data file")
 @click.option("-x", "--example", is_flag=True, default=False)
-def cli(data_folder: str, day: int, data_file: str, example: bool):
+@click.option("-n", "--example-number", default=0, help="Example number")
+def cli(data_folder: str, day: int, data_file: str, example: bool, example_number):
     """Launches a day"""
-    ex_suffix = "" if not example else "ex"
+    ex_suffix = "" if not example else f"ex{'' if example_number == 0 else example_number}"
     data_file = data_file if data_file is not None else f"day{day}{ex_suffix}.aoc"
     filename = f"{data_folder}/{data_file}"
    
-    christmas_header(day, filename)
+    print_christmas_header(day, filename)
     
     match day:
         case n if 1 <= n <= 25:
