@@ -68,10 +68,20 @@ def hand_type(hand: str) -> HandType:
 
 
 T = TypeVar("T", bound=Comparable)
-def maximum(xs: Iterator[T], cmp: Callable[[T, T], int] | None = None) -> T:
+def maximum(xs: Iterator[T]) -> T:
     mx = None
-    if cmp is None:
-        cmp = lambda x,y: x > y
+    cmp: Callable[[T, T], bool] = lambda x,y: x > y
+
+    for x in xs:
+        if mx is None or cmp(x,mx):
+            mx = x
+    if mx is None:
+        raise ValueError(f"Expected non-empty list, got {list(xs)}")
+    return mx
+
+T2 = TypeVar("T2")
+def maximum_by(xs: Iterator[T2], cmp: Callable[[T2, T2], int]) -> T2:
+    mx = None
 
     for x in xs:
         if mx is None or cmp(x,mx):
@@ -109,7 +119,9 @@ def sub_with(prefix: str, curr: str, sub_ch: str, elements: list[str]) -> list[s
 def with_substitutions(hand: str) -> HandType:
     subs = substitute_joker(hand)
     try:
-        return maximum(map(hand_type, subs), cmp=lambda x,y: x.value > y.value)
+        return maximum_by(
+            map(hand_type, subs),
+            cmp=lambda x,y: x.value > y.value)
     except ValueError:
         raise ValueError(f"failed subbing! {hand} => subs: {subs}")
 
@@ -125,7 +137,8 @@ def parse_hands(file: TextIOWrapper) -> list[tuple[str, int]]:
                 raise ValueError(f"Unhandled case: {lexs}")
     return out
 
-def cmp(a, b) -> int:
+Tcmp = TypeVar("Tcmp", bound=Comparable)
+def cmp(a: Tcmp, b: Tcmp) -> int:
     if a > b: return 1
     elif b < a: return -1
     else: return 0
