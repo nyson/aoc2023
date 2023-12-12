@@ -33,10 +33,13 @@ class Style(Enum):
     framed: int = 51
 
 reset = "\u001b[0m"
+reset_dbg = "u001b[0m"
 
 def styled(text: str, *ins: Enum):
     set = mk_set_ins(ins)
     return f"{set}{text}{reset}"
+
+
 
 def carousel(text: str, *instruction_sets: list[Enum], base: list[Enum] | None = None):
     s = "" if base is None else mk_set_ins(base)
@@ -50,8 +53,7 @@ def carousel(text: str, *instruction_sets: list[Enum], base: list[Enum] | None =
 
 def mk_set_ins(ins):
     ins_s = ";".join([f"{i.value}" for i in ins if i is not None])
-    set = f"\u001b[{ins_s}m"
-    return set
+    return f"\u001b[{ins_s}m"
 
 
 # launcher
