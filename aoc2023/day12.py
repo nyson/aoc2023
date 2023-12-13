@@ -54,44 +54,14 @@ class PicrossRow():
 		self.__populate_broken()
 		self.size = len(self.symbols)
 
-	def populate_all_unknowns(
-			self,
-			prefix: list[E] | None = None,
-			unknown_at: list[int] | None = None) -> list[list[E]]:
-		if prefix is None:
-			prefix = []
-		if unknown_at is None:
-			unknown_at = [i for i,v in enumerate(self.symbols)
-						  if v == E.unknown]
-
-
-		match unknown_at:
-			case [i, *rest]:
-				if self.symbols[i] != E.unknown:
-					raise ValueError(f"Expected unknown, got i: {i}, prefix: {prefix}, \
-					  sym: {zip(self.symbols, itertools.count())}")
-
-				print(f"{prefix}{self.symbols[len(prefix):i]}Matching at {i} before {rest}")
-				known_prefix = prefix + self.symbols[len(prefix):i]
-				possible_prefixes = [known_prefix + [x] for x in [E.broken, E.ok]]
-				strs: list[list[list[E]]] = [
-					self.populate_all_unknowns(prefix=p, unknown_at=rest)
-					for p in possible_prefixes]
-				return flatten(strs)
-			case []:
-				return [prefix + self.symbols[:len(prefix)]]
-			case invalid:
-				raise ValueError(f"Did not expect {invalid}")
-
-
-	def __all_possible(self, prefix: list[E], symbols: list[E]) -> list[list[E]]:
+	def all_possible(self, prefix: list[E], symbols: list[E]) -> list[list[E]]:
 		match symbols:
 			case [E.unknown, *rest]:
-				pos = [self.__all_possible(prefix + [sub], rest)
+				pos = [self.all_possible(prefix + [sub], rest)
 					   for sub in [E.ok, E.broken]]
 				return flatten(pos)
 			case [ch, *rest]:
-				return self.__all_possible(prefix + [ch], rest)
+				return self.all_possible(prefix + [ch], rest)
 			case []:
 				return [prefix]
 			case invalid:
@@ -133,10 +103,57 @@ class PicrossRow():
 
 	# for instance ???.###
 	# => #.#.###
-	def possible_solutions(self) -> list[list[E]]:
-		xs = self.__all_possible([], self.symbols)
+	def valid_solutions(self) -> list[list[E]]:
+		xs = self.all_possible([], self.symbols)
 		return [x for x in xs if self.fulfills_predicate(x)]
+	
+	def __can_generate_broken(self, indicators: list[int], broken_c: int):
+		return len(indicators) > 0 and broken_c < indicators[0]
 
+	def __gen_ok(self, prefix: list[E], rest: list[E], indicators: list[int], broken_c: int) -> list[E]:
+		if broken_c > 0:
+			if len(indicators) > 0 and indicators[0] == broken_c:
+				indicators.pop(0)
+			else:
+				return []
+		return self.get_valid_branchese(prefix + [E.ok], rest, indicators, broken_c=0)
+	
+	def __gen_broken(self, prefix: list[E], rest: list[E], indicators: list[int], broken_c: int) -> list[E]:
+		if self.__can_generate_broken(indicators, broken_c):
+			return self.get_valid_branchese(
+							prefix + [E.broken], 
+							rest, 
+							indicators, 
+							broken_c=broken_c + 1)
+		else:
+			return []
+
+	def get_valid_branchese(self, prefix, symbols: list[E], indicators: list[int], broken_c:int =0) -> list[E]:
+		match symbols:
+			case [E.unknown, *rest]:
+				pos = [
+					self.__gen_ok(prefix, rest, indicators, broken_c),
+					self.__gen_broken(prefix, rest, indicators, broken_c)
+				]
+
+				return flatten(pos)
+
+			case [E.broken, *rest]:
+				return self.__gen_broken(prefix, rest, indicators, broken_c)
+			
+			case [E.ok, *rest]:
+				return self.__gen_ok(prefix, rest, indicators, broken_c)
+			
+			case []:
+				return [prefix]
+			
+			case invalid:
+				raise ValueError(f"__all_possible unhandled case: {invalid}")
+
+
+	def iteratively_valid_solutions(self):
+		return self.get_valid_branchese([], self.symbols.copy(), self.indicators.copy())
+	
 def parse_picross_row(s: str) -> PicrossRow:
 	symbols: list[E] = []
 	state, indicators = s.split(" ")
@@ -157,6 +174,12 @@ def run(file: TextIOWrapper):
 
 	for _, r in enumerate(lines):
 		picrow = parse_picross_row(r)
-		sum += len(picrow.possible_solutions())
+		sols = picrow.iteratively_valid_solutions()
+		sum += len([_ for s in sols if picrow.fulfills_predicate(s)])
+		print(f"{picrow} with solutions:")
+		for s in sols:
+			print(f"\t{'✅' if picrow.fulfills_predicate(s) else '☔'}: {s}")
+		
+		
 
 	print(f"Total valid solutions: {sum}")
