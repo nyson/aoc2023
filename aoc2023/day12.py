@@ -1,185 +1,94 @@
-import itertools
-from multiprocessing import Value
-from time import time
-from typing import TypeVar
-from dataclasses import dataclass, field
-from enum import Enum
 from io import TextIOWrapper
-
-class E(Enum):
-	broken = '#'
-	ok = '.'
-	unknown = '?'
-
-	def __repr__(self) -> str:
-		return self.value if self.value in "#.?" else "x"
-
-T = TypeVar("T")
-def flatten(xss: list[list[T]]) -> list[T]:
-	return [x for xs in xss for x in xs]
+import itertools
+from typing import Iterator
 
 
-@dataclass
-class PicrossRow():
-	symbols: list[E]
-	indicators: list[int]
-	size: int = field(init=False)
-	known_broken_ranges: list[int] = field(init=False)
+def parse_pt1(f: TextIOWrapper) -> Iterator[tuple[str, list[int]]]:
+    for l in f.readlines():
+        [puz, runs] = l.strip().split()
+        yield puz, list(map(int, runs.split(",")))
 
-	def __repr__(self) -> str:
-		out = ""
-		out += "symbols:" + "".join([repr(s) for s in self.symbols])
-		out += f"\nindicators: {self.indicators}"
-		out += f"\nknown broken: {self.known_broken_ranges}"
-		out += "\n"
-		return out
+def parse_pt2(f: TextIOWrapper) -> Iterator[tuple[str, list[int]]]:
+    for l in f.readlines():
+        [puz, runs] = l.strip().split()
+        yield ('?'.join(itertools.repeat(puz,5)),
+               5*list(map(int, runs.split(","))))
 
-	def __populate_broken(self):
-		self.known_broken_ranges =[]
-		break_c = 0
-		for s in self.symbols:
-			match s:
-				case E.broken:
-					break_c += 1
-				case _ if break_c > 0:
-					self.known_broken_ranges.append(break_c)
-					break_c = 0
-				case _:
-					pass
+def kf(s: str, rs: list[int], con: bool) -> int:
+    return hash((s, ':'.join(map(str, rs)), con))
 
-		if break_c > 0:
-			self.known_broken_ranges.append(break_c)
+memo: dict[int,int] = {}
+def all_sols(p: str, rs: list[int], consuming: bool = False, prefix:str="") -> int:
+    if len(p)==0:
+        if sum(rs) == 0:
+            return 1
+        else:
+            return 0
 
-	def __post_init__(self):
-		self.__populate_broken()
-		self.size = len(self.symbols)
+    match memo.get(kf(p, rs, consuming)):
+        case None: pass
+        case i: return i
 
-	def all_possible(self, prefix: list[E], symbols: list[E]) -> list[list[E]]:
-		match symbols:
-			case [E.unknown, *rest]:
-				pos = [self.all_possible(prefix + [sub], rest)
-					   for sub in [E.ok, E.broken]]
-				return flatten(pos)
-			case [ch, *rest]:
-				return self.all_possible(prefix + [ch], rest)
-			case []:
-				return [prefix]
-			case invalid:
-				raise ValueError(f"__all_possible unhandled case: {invalid}")
+    match p[0], p[1:]:
+        # broken but we got runs left
+        case '#', rest if len(rs) > 0 and rs[0] > 0:
+            rsN = [rs[0] - 1, *rs[1:]]
+            sol = all_sols(rest, rsN, consuming=True, prefix=prefix + '#')
+            memo[kf(p, rs, consuming)] = sol
+            return sol
 
+        # no possible solutions unless we can consume runs
+        case '#', _:
+            return 0
 
-	def fulfills_predicate(self, symbols: list[E]) -> bool:
-		[ind, *inds] = self.indicators.copy()
-		c: int = 0
-		for s in symbols:
-			match s:
-				case E.ok if c > 0 and c == ind:
-					if len(inds) > 0:
-						[ind, *inds] = inds
-					else:
-						ind = 0
-					c = 0
+        # ok but we have an empty rs we need to pop
+        case '.', rest if consuming and len(rs) > 0 and rs[0] == 0:
+            sol = all_sols(rest, rs[1:], consuming=False, prefix=prefix + '.')
+            memo[kf(p, rs, consuming)] = sol
+            return sol
 
-				case E.ok if c > 0 and c != ind:
-					return False
+        # no possible oks as a consuming state wih none left to consume is bad
+        case '.', rest if consuming:
+            return 0
 
-				case E.ok:
-					pass
+        # ok as we are not consuming
+        case '.', rest:
+            sol = all_sols(rest, rs, consuming, prefix=prefix + '.')
+            memo[kf(p, rs, consuming)] = sol
+            return sol
 
-				case E.broken:
-					if ind == 0:
-						return False
-					c += 1
+        # branching case
+        case '?', rest:
+            ok_sols = all_sols('.' + rest, rs, consuming, prefix)
+            broken_sols = all_sols('#' + rest, rs, consuming, prefix)
+            return ok_sols + broken_sols
 
-				case E.unknown:
-					raise ValueError("I can't handle unknowns in __fulfills_predicate")
+        case invalid:
+            conditions = [
+                ("len(rs) > 0 and rs[0] > 0", len(rs) > 0 and rs[0] > 0),
+                ("if len(rs) > 0 and rs[0] == 0", len(rs) > 0 and rs[0] == 0)]
 
-		if c > 0:
-			if c == ind and len(inds) == 0:
-				return True
-			else:
-				return False
-		return len(inds) == 0 and ind == 0
+            nl = "\n\t"
+            raise ValueError(f"{invalid}: \n\t" + nl.join([f"{exp} => {evl}" for exp, evl in conditions]))
 
-	# for instance ???.###
-	# => #.#.###
-	def valid_solutions(self) -> list[list[E]]:
-		xs = self.all_possible([], self.symbols)
-		return [x for x in xs if self.fulfills_predicate(x)]
-	
-	def __can_generate_broken(self, indicators: list[int], broken_c: int):
-		return len(indicators) > 0 and broken_c < indicators[0]
+def run_pt1(f: TextIOWrapper):
+    s = 0
+    for puzzle, runs in parse_pt1(f):
+        print(f"{puzzle.ljust(25)}: {runs}", end ="")
+        sols = all_sols(puzzle, runs)
+        s += sols
+        print(f" => {sols} solutions!")
 
-	def __gen_ok(self, prefix: list[E], rest: list[E], indicators: list[int], broken_c: int) -> list[E]:
-		if broken_c > 0:
-			if len(indicators) > 0 and indicators[0] == broken_c:
-				indicators.pop(0)
-			else:
-				return []
-		return self.get_valid_branchese(prefix + [E.ok], rest, indicators, broken_c=0)
-	
-	def __gen_broken(self, prefix: list[E], rest: list[E], indicators: list[int], broken_c: int) -> list[E]:
-		if self.__can_generate_broken(indicators, broken_c):
-			return self.get_valid_branchese(
-							prefix + [E.broken], 
-							rest, 
-							indicators, 
-							broken_c=broken_c + 1)
-		else:
-			return []
-
-	def get_valid_branchese(self, prefix, symbols: list[E], indicators: list[int], broken_c:int =0) -> list[E]:
-		match symbols:
-			case [E.unknown, *rest]:
-				pos = [
-					self.__gen_ok(prefix, rest, indicators, broken_c),
-					self.__gen_broken(prefix, rest, indicators, broken_c)
-				]
-
-				return flatten(pos)
-
-			case [E.broken, *rest]:
-				return self.__gen_broken(prefix, rest, indicators, broken_c)
-			
-			case [E.ok, *rest]:
-				return self.__gen_ok(prefix, rest, indicators, broken_c)
-			
-			case []:
-				return [prefix]
-			
-			case invalid:
-				raise ValueError(f"__all_possible unhandled case: {invalid}")
+    print(f"{s} total solutions!")
 
 
-	def iteratively_valid_solutions(self):
-		return self.get_valid_branchese([], self.symbols.copy(), self.indicators.copy())
-	
-def parse_picross_row(s: str) -> PicrossRow:
-	symbols: list[E] = []
-	state, indicators = s.split(" ")
-	for c in state:
-		match c:
-			case ch if ch in ['#', '.', '?']:
-				symbols.append(E(ch))
-			case invalid:
-				raise ValueError(f"Unhandled char: '{invalid}'")
+def run(f: TextIOWrapper):
+    s = 0
+    for puzzle, runs in parse_pt2(f):
+        print(f"{puzzle}: {runs}")
+        sols = all_sols(puzzle, runs)
+        s += sols
+        print(f"\t => {sols} solutions!")
 
+    print(f"{s} total solutions!")
 
-	return PicrossRow(symbols, [int(c) for c in indicators.split(",")])
-
-def run(file: TextIOWrapper):
-	sum = 0
-	lines = list(map(str.strip, file.readlines()))
-	_ = len(lines)
-
-	for _, r in enumerate(lines):
-		picrow = parse_picross_row(r)
-		sols = picrow.iteratively_valid_solutions()
-		sum += len([_ for s in sols if picrow.fulfills_predicate(s)])
-		print(f"{picrow} with solutions:")
-		for s in sols:
-			print(f"\t{'✅' if picrow.fulfills_predicate(s) else '☔'}: {s}")
-		
-		
-
-	print(f"Total valid solutions: {sum}")
