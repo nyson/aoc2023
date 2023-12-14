@@ -71,7 +71,7 @@ def all_sols(p: str, rs: list[int], consuming: bool = False, prefix:str="") -> i
             nl = "\n\t"
             raise ValueError(f"{invalid}: \n\t" + nl.join([f"{exp} => {evl}" for exp, evl in conditions]))
 
-def run_pt1(f: TextIOWrapper):
+def part1(f: TextIOWrapper):
     s = 0
     for puzzle, runs in parse_pt1(f):
         print(f"{puzzle.ljust(25)}: {runs}", end ="")
@@ -82,7 +82,13 @@ def run_pt1(f: TextIOWrapper):
     print(f"{s} total solutions!")
 
 
-def run(f: TextIOWrapper):
+def run(f: TextIOWrapper, part: int):
+    if part == 2:
+        part2(f)
+    else:
+        part1(f)
+
+def part2(f: TextIOWrapper):
     s = 0
     for puzzle, runs in parse_pt2(f):
         print(f"{puzzle}: {runs}")

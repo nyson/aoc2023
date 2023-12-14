@@ -27,7 +27,8 @@ def print_christmas_header(day:int, filename:str):
 @click.option("-f", "--data-file", default=None, help="path to data file")
 @click.option("-x", "--example", is_flag=True, default=False)
 @click.option("-n", "--example-number", default=0, help="Example number")
-def cli(data_folder: str, day: int, data_file: str | None, example: bool, example_number):
+@click.option("-p", "--part", default=0, help="Which part")
+def cli(data_folder: str, day: int, data_file: str | None, example: bool, example_number: int, part: int):
     """Launches a day"""
     ex_suffix = "" if not example else f"ex{'' if example_number == 0 else example_number}"
     data_file = data_file if data_file is not None else f"day{day}{ex_suffix}.aoc"
@@ -37,10 +38,10 @@ def cli(data_folder: str, day: int, data_file: str | None, example: bool, exampl
 
     match day:
         case n if 1 <= n <= 25:
-            run_dynamic(filename, n)
+            run_dynamic(filename, n, part)
         case _: print(f"{u.day} {day} not supported yet")
 
-def run_dynamic(filename: str, n: int):
+def run_dynamic(filename: str, day: int, part: int):
     if not path.exists(filename):
         print(f"\n{u.warning}", end= " ")
         print(styled(f"Oops! {filename} doesn't exist!", Style.framed, Style.bold, Style.underline) + f" {u.confused}")
@@ -51,15 +52,23 @@ def run_dynamic(filename: str, n: int):
         with open(filename) as file:
             start_time = time.time()
 
-            importlib.import_module(
-                f".day{n}",
-                ".aoc2023"
-                ).run(file)
+            try:
+                importlib.import_module(
+                    f".day{day}",
+                    ".aoc2023"
+                    ).run(file, part)
+            except:
+                importlib.import_module(
+                    f".day{day}",
+                    ".aoc2023"
+                    ).run(file)
+
+
 
             print(f"--- {time.time() - start_time} seconds ---")
 
     except ImportError as e:
-        print(f"Could not import day{n}: {e}")
+        print(f"Could not import day{day}: {e}")
 
 
 if __name__ == '__main__':
