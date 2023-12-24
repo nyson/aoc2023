@@ -5,6 +5,8 @@ from itertools import count
 import itertools
 from typing import Any, Iterator, Literal, Sequence, Type, TypeVar
 
+from .utils import Pos
+
 class D(Enum):
     up   = 1
     down = 2
@@ -39,33 +41,6 @@ def has_d(p: Pipe, d: D):
         case (_, d2) if d2 == d: return True
         case _: return False
 
-@dataclass
-class Pos():
-    x: int
-    y: int
-
-    def adjs(self):
-        return [Pos(self.x + x,self.y + y) for (x,y) in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
-
-    def adjs_diag(self):
-        ixs = [-1, 0, 1]
-        return [Pos(self.x + x,self.y + y) 
-                for x in ixs 
-                for y in ixs 
-                if (x,y) != (0,0)]
-
-    def __add__(self, other: Any):
-        return Pos(self.x + other.x, self.y + other.y)
-    
-    def __hash__(self) -> int:
-        return hash((self.x, self.y))
-    
-    def __str__(self) -> str:
-        return f"({self.x}, {self.y})"
-    
-    def __repr__(self) -> str:
-        return self.__str__()
-
 T = TypeVar("T")
 def assume(t: T | None) -> T:
     if t is None:
@@ -74,7 +49,7 @@ def assume(t: T | None) -> T:
         return t
 
 def filter_none(xs: list[T | None]) -> list[T]:
-    return [x for x in xs if x is not None]    
+    return [x for x in xs if x is not None]
 
 
 @dataclass
@@ -85,7 +60,7 @@ class PipeField():
     path: set[Pos] | None = field(default = None)
 
     def in_grid(self, p: Pos) -> bool:
-        return 0 <= p.x <= self.max.x and 0 <= p.y <= self.max.y 
+        return 0 <= p.x <= self.max.x and 0 <= p.y <= self.max.y
 
     def grid_size(self) -> int:
         return self.max.x * self.max.y
@@ -100,22 +75,22 @@ class PipeField():
         visited: set[Pos] = set()
 
         to_visit = list(from_pos)
-        
+
         while len(to_visit) > 0:
             p = to_visit.pop()
             if p in self.path:
                 pass
             elif self.in_grid(p):
-                visited.add(p)  
+                visited.add(p)
                 for x in p.adjs_diag():
                     if self.in_grid(p) and x not in visited:
                         to_visit.append(x)
-                
+
         # print(visited)
 
         # print(f"self.grid_size()=>{self.grid_size()} - len(visited){len(visited)} - len(self.path){len(self.path)}: {self.grid_size() - len(visited) - len(self.path)}")
         all = set([Pos(x,y) for x in range(0, self.max.x + 1) for y in range(0, self.max.y + 1)])
-        
+
         # self.pp(highlight= all.difference(visited, self.path))
         return(all.difference(visited, self.path))
 
@@ -139,14 +114,14 @@ class PipeField():
             current = next
             prev = momentum
             if pp: self.pp(current)
-            if self.grid.get(next) == "S": 
+            if self.grid.get(next) == "S":
                 break
 
         self.path = set([p for p, _ in breadcrumbs])
         self.pp(highlight=left.difference(self.path))
         # self.pp(highlight=self.path.difference(right))
         return breadcrumbs, self.get_area(left.difference(self.path)), self.get_area(right.difference(self.path))
-    
+
     def get_lr(self, p: Pos, d:D) -> tuple[list[Pos], list[Pos]]:
         match self.grid.get(p):
             case None:
@@ -155,11 +130,11 @@ class PipeField():
             #   v
             # R ║ L
             #   v
-            case (D.up, D.down) : 
+            case (D.up, D.down) :
                 a = [Pos(p.x-1, p.y)]
                 b = [Pos(p.x+1, p.y)]
                 return (a,b) if d == D.down else (b,a)
-            
+
             #  L
             # >═>
             #  R
@@ -167,23 +142,23 @@ class PipeField():
                 a = [Pos(p.x, p.y+1)]
                 b = [Pos(p.x, p.y-1)]
                 return (a,b) if d == D.right else (b,a)
-            
+
             #   v
-            # L ╚> 
-            #   L   
+            # L ╚>
+            #   L
             case (D.up, D.right) :
                 a = [Pos(p.x-1, p.y), Pos(p.x, p.y+1)]
                 b = []
                 return (a,b) if d == D.down else (b,a)
-            
+
             #  Ä
             # >╝ R
-            #  R   
+            #  R
             case (D.up, D.left) :
                 a = []
                 b = [Pos(p.x+1, p.y), Pos(p.x, p.y+1)]
                 return (a,b) if d == D.down else (b,a)
-            
+
             #   L
             # L ╔
             #   Ä
@@ -191,20 +166,20 @@ class PipeField():
                 a = [Pos(p.x-1, p.y), Pos(p.x, p.y-1)]
                 b = []
                 return (a,b) if d == D.left else (b,a)
-            
-            # R 
+
+            # R
             # ╗ R
-            # Ä 
+            # Ä
             case (D.down, D.left) :
                 a = []
                 b = [Pos(p.x+1, p.y), Pos(p.x, p.y-1)]
                 return (a,b) if d == D.right else (b,a)
-            
+
 
 
             case invalid:
                 print(ValueError(f"Unhandled case: {invalid}"))
-        
+
         return [],[]
 
     def get_segments(self):
@@ -236,9 +211,9 @@ class PipeField():
 
         raise ValueError("This is not a valid state!")
 
-    
+
     def pp_tup(self, dt: tuple[D, D]):
-        # ╝ 	╗ 	╔ 	╚ 	╣ 	╩ 	╦ 	╠ 	═ 	║ 	╬ 	
+        # ╝ 	╗ 	╔ 	╚ 	╣ 	╩ 	╦ 	╠ 	═ 	║ 	╬
         match sorted([dt[0], dt[1]], key=lambda x: x.value):
             case [D.up, D.down]: return " ║"
             case [D.up, D.left]: return "═╝"
@@ -246,7 +221,7 @@ class PipeField():
             case [D.down, D.left]: return "═╗"
             case [D.down, D.right]: return " ╔"
             case [D.left, D.right]: return "══"
-    
+
     def pp(self, current: Pos | None = None, highlight: set[Pos] =set()):
         stuff = itertools.cycle("🎄⭐🔔🎄🦌🎁🎄")
         for y in range(0, self.max.y):
@@ -271,19 +246,19 @@ class PipeField():
 
     def find_segments(self):
         pass
-                
-    def walk_one(self, current: Pos, prev: D | None) -> tuple[Pos, D]:    
+
+    def walk_one(self, current: Pos, prev: D | None) -> tuple[Pos, D]:
         available_moves = [
-            d for d in self.paths_from_pos(current) 
+            d for d in self.paths_from_pos(current)
             if prev is None or d != counterpart(prev)]
-        
-        possible_moves = [(m, d) 
+
+        possible_moves = [(m, d)
                         for m, d in [(self.move_pos(current, d), d) for d in available_moves]
                         if m is not None
                         ]
         if len(possible_moves) == 0:
             raise ValueError(f"No possible moves from {current}")
-        
+
         return possible_moves[0]
 
 
@@ -292,7 +267,7 @@ def parse_pipe(ch: str) -> Pipe | None:
         case "S": return "S"
         case "|": return (D.up,   D.down )
         case "-": return (D.left, D.right)
-        case "7": return (D.down, D.left ) 
+        case "7": return (D.down, D.left )
         case "F": return (D.down, D.right)
         case "J": return (D.up,   D.left )
         case "L": return (D.up,   D.right)
@@ -305,7 +280,7 @@ def parse_grid(file) -> PipeField:
     for y in count():
         height = max(y, height)
         row = file.readline()
-        if row == "": 
+        if row == "":
             break
 
         for x,c in enumerate(row):
@@ -313,14 +288,14 @@ def parse_grid(file) -> PipeField:
             match parse_pipe(c):
                 case None:
                     pass
-        
+
                 case "S":
                     start = Pos(x,y)
                     grid[Pos(x, y)] = "S"
-        
+
                 case p if p is not None:
                     grid[Pos(x, y)] = p
-        
+
                 case invalid:
                     raise ValueError(f"Unhandled case {invalid}")
 
@@ -336,7 +311,7 @@ def run(file: TextIOWrapper):
 
     bc, left_area, right_area = f.get_path()
 
-  
+
     print(f"Farthest part on the path: {len(bc) / 2}")
 
     f.pp(highlight=left_area)

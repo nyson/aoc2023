@@ -1,22 +1,10 @@
 from dataclasses import dataclass
-from email.policy import default
 from io import TextIOWrapper
 import itertools
-from typing import Any, Callable, Iterable
+from typing import Callable, Iterable
+from .utils import Pos
+from .unicode_symbols import FgColor, styled, Style
 
-from click import style
-from .unicode_symbols import BgColor, FgColor, styled, Style
-
-@dataclass
-class Pos():
-	x: int
-	y: int
-
-	def __lt__(self, other:Any) -> bool:
-		return (self.x, self.y) < (other.x, other.y)
-
-	def __hash__(self) -> int:
-		return hash((self.x, self.y))
 
 @dataclass
 class Grid():

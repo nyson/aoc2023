@@ -1,5 +1,9 @@
 from enum import Enum
+from functools import reduce
 import itertools
+from multiprocessing import Value
+import re
+from typing import Callable
 
 
 class FgColor(Enum):
@@ -39,6 +43,87 @@ def styled(text: str, *ins: Enum):
     set = mk_set_ins(ins)
     return f"{set}{text}{reset}"
 
+def visible_length(s: str):
+    return len(re.sub(re.compile("\\[\\d.*m"), '', s.strip()))
+
+def take_n_chars(base: str, n: int) -> tuple[str, str]:
+    """
+    Take n chars, ignoring ansi formatting and considering unicode characters
+    ^ tall order
+    """
+    out = ""
+    while n > 0:
+        match re.match("(^\u001b\\[\\d+(;\\d+)*m)", base):
+            case None:
+                pass
+            case mg:
+                start, end = mg.start(0), mg.end(0)
+                out += base[start:end]
+                base = base[end:]
+                continue
+
+        if n <= 0:
+            break
+
+        if base == "":
+            return out, ""
+
+        out += base[0]
+        base = base[1:]
+        n -= 1
+
+    return out, base
+
+
+
+def intersperse_at(base: str, sub: str, indexes: list[int], width:int =2):
+    if len(indexes) == 0:
+        return base
+    sort_ixs: list[int] = sorted(list(set(indexes)))
+
+    out = ""
+    i = 0
+    while len(sort_ixs) > 0 and base != "":
+
+        i += 1
+        chs, base = take_n_chars(base, width)
+        out += chs
+        if sort_ixs[0] == i:
+            out += sub
+            sort_ixs.pop(0)
+
+
+    return out + base
+
+
+
+def draw_box(string:str, col_at:list[int] = [], row_at: list[int] = [], cell_width: int=2) -> str:
+    strs = string.strip().split("\n")
+    x_max = reduce(lambda acc, s: max(acc, visible_length(s)), strs, 0)
+    border_x: Callable[[str], str] = lambda ch: "─" + intersperse_at(
+        "".join(itertools.repeat("─", (x_max + 3) * 2)) + "",
+        ch,
+        list(map(lambda x: x, col_at)),
+        width=cell_width
+        ) + "─"
+
+
+    out = f"╭{border_x('┬')}╮\n"
+
+    for i,s in enumerate(strs):
+        if i in row_at:
+            out += f"├{border_x('┼')}┤\n"
+
+        formatted_s = intersperse_at(
+            s.ljust(x_max),
+            f"{reset}│",
+            col_at,
+            width = cell_width)
+        out += f"│ {formatted_s}{reset} │\n"
+        # out += f"│ {s.ljust(x_max)} │\n"
+    out += f"╰{border_x('┴')}╯"
+
+    return out
 
 
 def carousel(text: str, *instruction_sets: list[Enum], base: list[Enum] | None = None):
